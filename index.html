@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>USERK8 Milky Way Simulator</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="galaxy"></canvas>
+
+  <script>
+    const canvas = document.getElementById('galaxy');
+    const ctx = canvas.getContext('2d');
+
+    let width, height, centerX, centerY;
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      centerX = width / 2;
+      centerY = height / 2;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Star {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.sqrt(Math.random()) * 300 + 30;
+        const tilt = 0.3;
+
+        this.radius = distance;
+        this.angle = angle;
+        this.speed = 0.0005 + Math.random() * 0.001;
+
+        // give it some 3D offset to simulate thickness
+        this.yOffset = (Math.random() - 0.5) * distance * tilt;
+
+        // brightness by closeness to center
+        this.alpha = Math.max(0.2, 1 - this.radius / 400);
+        this.size = Math.random() * 1.2 + 0.5;
+        this.color = `rgba(255,255,255,${this.alpha})`;
+      }
+
+      update() {
+        this.angle += this.speed;
+      }
+
+      draw(ctx) {
+        const x = centerX + this.radius * Math.cos(this.angle);
+        const y = centerY + this.radius * Math.sin(this.angle) * 0.2 + this.yOffset;
+
+        ctx.beginPath();
+        ctx.arc(x, y, this.size, 0, 2 * Math.PI);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+      }
+    }
+
+    const stars = [];
+    const starCount = 800;
+
+    for (let i = 0; i < starCount; i++) {
+      stars.push(new Star());
+    }
+
+    function drawCoreGlow() {
+      const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 100);
+      gradient.addColorStop(0, 'rgba(255,255,255,0.3)');
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 100, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      drawCoreGlow();
+
+      for (let star of stars) {
+        star.update();
+        star.draw(ctx);
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
